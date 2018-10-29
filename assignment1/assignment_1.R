@@ -1,14 +1,14 @@
 len = 15;
-order = 5;
+order = 7;
 x <- vector("numeric", len);
 y <- vector("numeric", len);
 
 fun <- function(x){ x^3 - 9*x + 15};
 
 for(i in 1:len){
-  ranNr <- runif(1, -2.0, 2.0);
+  ranNr <- runif(1, -1.5, 1.5);
   x[i] <- ranNr;
-  y[i] <- fun(ranNr) + rnorm(1)/10;
+  y[i] <- fun(ranNr) + rnorm(1)*1.5;
 }
 
 plot(x,y)
@@ -49,50 +49,53 @@ errorFunction <- function(x, w, lambda, len){
   return(abs(0.5*result));
 }
 
-lambdaAxis <- vector("numeric", 30);
-errorTrainingAxis <- vector("numeric", 30);
-errorTestAxis <- vector("numeric", 30);
+lambdaAxis <- vector("numeric", 20);
+errorTrainingAxis <- vector("numeric", 20);
+errorTestAxis <- vector("numeric", 20);
 index = 1;
 maxY = 0;
 minY = 100;
 
-for(l in -31:-1){
-  lambda = exp(l);
-  #lambda = l;
-  print(lambda)
+for(l in -10:10){
+  #lambda = exp(l);
+  #print(lambda);
+  lambda = l/100;
   errorTraining = 0;
   errorTest = 0;
+  isLast = TRUE;
   
-  for(i in 1:(len)){
+  for(i in 1:(len/3)){
     k = 1;
-    trainingValues = vector("numeric", len-1);
-    trainingTargetValues = vector("numeric", len-1);
-    testValues = vector("numeric", 1);
-    
-    for(j in 1:(len-1)){
-      if(j == ((i-1)*1)+1){
+    trainingValues = vector("numeric", len-3);
+    trainingTargetValues = vector("numeric", len-3);
+    testValues = vector("numeric", 3);
+
+    for(j in 1:(len-3)){
+      if(j == ((i-1)*3)+1){
         testValues[1] = x[k];
-        k = k+1;
+        testValues[2] = x[k+1];
+        testValues[3] = x[k+2];
+        
+        k = k+3;
+        isLast = FALSE;
       }
       trainingValues[j] = x[k];
       trainingTargetValues[j] = y[k];
       k = k+1;
     }
-    if(testValues[1] == 0){
-      testValues[1] = x[len];
+    if(isLast){
+      testValues[1] = x[len-2];
+      testValues[2] = x[len-1];
+      testValues[3] = x[len];
     }
     
-    vectorW = linReg(len-1, order, trainingValues, trainingTargetValues, lambda);
+    vectorW = linReg(len-3, order, trainingValues, trainingTargetValues, lambda);
 
-    z = seq(-5,50,0.1);
-    lines(z, reg(z, vectorW) ,col="green", type="l");
-    
-    errorTrainingTmp = errorFunction(trainingValues, vectorW, lambda, len-1);
-    errorTraining = errorTraining + sqrt(2*errorTrainingTmp/(len-1));
+    errorTrainingTmp = errorFunction(trainingValues, vectorW, lambda, len-3);
+    errorTraining = errorTraining + sqrt(2*errorTrainingTmp/(len-3));
 
-    errorTestTmp = errorFunction(testValues, vectorW, lambda, 1);
-
-    errorTest = errorTest + sqrt(2*errorTestTmp);
+    errorTestTmp = errorFunction(testValues, vectorW, lambda, 3);
+    errorTest = errorTest + sqrt(2*errorTestTmp/3);
   }
   
   errorTraining = errorTraining/len;
@@ -104,16 +107,16 @@ for(l in -31:-1){
   
   index = index+1;
   
-  if(maxY < errorTraining)
+   if(maxY < errorTraining)
     maxY = errorTraining;
   if(maxY < errorTest)
     maxY = errorTest;
-  
+
   if(minY > errorTraining)
     minY = errorTraining;
   if(minY > errorTest)
     minY = errorTest;
 }
 
-plot(lambdaAxis, errorTrainingAxis ,col="red", type="l", ylim=c(minY,maxY));
-lines(lambdaAxis, errorTestAxis ,col="green", type="l");
+plot(lambdaAxis, errorTrainingAxis, col="red", type="l", ylim=c(0, maxY));
+lines(lambdaAxis, errorTestAxis, col="green", type="l");
