@@ -1,10 +1,14 @@
+#Number of training points
 len = 15;
-order = 7;
+#degree of the polynomial
+order = 9;
 x <- vector("numeric", len);
 y <- vector("numeric", len);
 
+#polynomial we want to approximate
 fun <- function(x){ x^3 - 9*x + 15};
 
+#generate random training points
 for(i in 1:len){
   ranNr <- runif(1, -1.5, 1.5);
   x[i] <- ranNr;
@@ -13,8 +17,11 @@ for(i in 1:len){
 
 plot(x,y)
 
+
+
 basisFunction <- function(x, i){x^i}
 
+#linear regression algorithm
 linReg <- function(len, order, x, y, lambda){
   Phi <- matrix(0, len, order);
   
@@ -32,6 +39,7 @@ linReg <- function(len, order, x, y, lambda){
   return(w);
 }
 
+#function to caclute y given the x and the coefficients w
 reg <- function(x, w){
   y = 0;
   for(i in 0:(order-1)){
@@ -40,12 +48,13 @@ reg <- function(x, w){
   return(y)
 }
 
+#Errorfunction
 errorFunction <- function(x, w, lambda, len){
   result = 0;
   for(n in 1:len){
-    result = result + (reg(x[n], w) - y[n])^2 #+ lambda/2 * (t(w)%*%w);
+    result = result + (reg(x[n], w) - y[n])^2 + lambda/2 * (t(w)%*%w);
   }
-  result = result + lambda/2 * (t(w)%*%w);
+  #result = result + lambda/2 * (t(w)%*%w);
   return(abs(0.5*result));
 }
 
@@ -54,11 +63,10 @@ errorTrainingAxis <- vector("numeric", 20);
 errorTestAxis <- vector("numeric", 20);
 index = 1;
 maxY = 0;
-minY = 100;
 
+#calculating errors for lambda values between -0.1 and 0.1
 for(l in -10:10){
   #lambda = exp(l);
-  #print(lambda);
   lambda = l/100;
   errorTraining = 0;
   errorTest = 0;
@@ -111,12 +119,8 @@ for(l in -10:10){
     maxY = errorTraining;
   if(maxY < errorTest)
     maxY = errorTest;
-
-  if(minY > errorTraining)
-    minY = errorTraining;
-  if(minY > errorTest)
-    minY = errorTest;
 }
 
-plot(lambdaAxis, errorTrainingAxis, col="red", type="l", ylim=c(0, maxY));
+#plot of the ERMS
+plot(lambdaAxis, errorTrainingAxis, col="red", type="l", ylim=c(0, maxY), xlab="Lambda", ylab = "ERMS");
 lines(lambdaAxis, errorTestAxis, col="green", type="l");
